@@ -12,5 +12,12 @@
     <h1><%= business.location %></h1>
 <a href="/business">All Businesses</a>
 <a href="/business/<%= business._id %>/update">Update Business</a>
+<!-- views/businesses/show.ejs 파일에 추가할 코드 -->
+
+<!-- 삭제 기능을 위한 폼과 버튼 -->
+<form action="/business/<%= business._id %>?_method=DELETE" method="POST">
+    <button>Delete</button>
+</form>
+
 </body>
 </html>

@@ -50,15 +50,22 @@ app.post('/business', async (req, res) => {
     await newBusiness.save();
     res.redirect(`/business/${newBusiness._id}`);
 });
+
 app.get('/business/:id/update', async (req, res) => {
-
     const { id } = req.params;
-
-    
     const business = await Business.findById(id);
-
-    
     res.render('businesses/update', { business });
+});
+app.put('/business/:id', async (req, res) => {
+    const { id } = req.params;
+    const business = await Business.findByIdAndUpdate(id, { ...req.body.business }, { runValidators: true, new: true });
+    res.redirect(`/business/${business._id}`);
+});
+
+app.delete('/business/:id', async (req, res) => {
+    const { id } = req.params;
+    await Business.findByIdAndDelete(id);
+    res.redirect('/business');
 });
 app.get('/business/:id', async (req, res) => {
     const business = await Business.findById(req.params.id);
