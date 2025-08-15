@@ -1,6 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import express from "express";
 import path from "path";
 import mongoose from "mongoose";
@@ -10,12 +7,16 @@ import Review from "./models/review.js";
 import { fileURLToPath } from 'url';
 import session from 'express-session';
 import OpenAI from "openai";
+import dotenv from 'dotenv';
 
+// .env 파일을 가장 먼저 읽어오도록 설정합니다.
+dotenv.config();
+
+// OpenAI 클라이언트를 .env 파일의 비밀번호를 이용해 설정합니다. (안전한 방식)
 const openAIClient = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY, // .env 파일에서 비밀번호를 안전하게 읽어옴
+    apiKey: process.env.OPENAI_API_KEY,
     organization: process.env.ORGANIZATION_ID,
 });
-
 
 const url = 'mongodb+srv://kusoyoung0326:tuZN1Uc3TeRqMFhj@cluster0.h6pbeh7.mongodb.net/yelpclone?retryWrites=true&w=majority&appName=Cluster0'
 mongoose.connect(url, {
@@ -164,4 +165,3 @@ app.post('/chat', async (req, res) => {
 app.listen(3000, () => {
     console.log('Serving on port 3000')
 });
-ㅎ
