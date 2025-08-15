@@ -7,10 +7,122 @@
     <title><%= business.title %></title>
 </head>
 <body>
-    <h1><%= business.title %></h1>
-    <h1><%= business.description %></h1>
-    <h1><%= business.location %></h1>
-<a href="/business">All Businesses</a>
-<a href="/business/<%= business._id %>/update">Update Business</a>
+    <!-- 제목 옆에 평균 평점이 표시되도록 수정되었습니다. -->
+    <h1><%= business.title %> - <%= business.averageRating %> &#9733;</h1>
+    <h2><%= business.location %></h2>
+    <p><%= business.description %></p>
+
+    <a href="/business">All Businesses</a>
+    <a href="/business/<%= business._id %>/update">Update Business</a>
+
+    <!-- 삭제 기능을 위한 폼과 버튼 -->
+    <form action="/business/<%= business._id %>?_method=DELETE" method="POST">
+        <button>Delete</button>
+    </form>
+
+    <hr> <!-- 구분선 -->
+
+    <!-- 리뷰 작성 폼 -->
+    <h2>Leave a Review</h2>
+    <form action="/business/<%=business._id%>/reviews" method="POST">
+        <div>
+            <label for="rating">Rating</label>
+            <input type="range" min="1" max="5" id="rating" name="review[rating]">
+        </div>
+        <div>
+            <label for="review-body">Review</label>
+            <textarea name="review[body]" id="review-body" cols="30" rows="3"></textarea>
+        </div>
+        <button type="submit">Submit Review</button>
+    </form>
+
+    <hr> <!-- 구분선 -->
+    
+    <!-- 리뷰 목록 표시 (안정성 개선) -->
+    <h3>Reviews</h3>
+    <% if(business.reviews && business.reviews.length > 0) { %>
+        <% for(let review of business.reviews) { %>
+            <div>
+                <h5>Rating: <%= review.rating %></h5>
+                <p>Review: <%= review.body %></p>
+                <!-- 각 리뷰 삭제 버튼 -->
+                <form action="/business/<%= business._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST">
+                    <button>Delete</button>
+                </form>
+            </div>
+        <% } %>
+    <% } else { %>
+        <p>No reviews yet. Be the first to leave a review!</p>
+    <% } %>
+
 </body>
+<!-- views/businesses/show.ejs 파일 하단에 추가할 코드 -->
+
+<hr>
+<h2>Chat with our AI Assistant</h2>
+
+<!-- 챗봇 대화 내용이 표시될 공간 -->
+<div id="chat-log" style="height: 200px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px;">
+    <!-- 초기 메시지 -->
+    <div><strong>Bot:</strong> Hello! How can I help you with <%= business.title %> today?</div>
+</div>
+
+<!-- 챗봇 메시지 입력 폼 -->
+<!-- onsubmit="sendChat(event)"는 폼 제출 시 sendChat 함수를 실행하라는 뜻입니다. -->
+<form onsubmit="sendChat(event)">
+    <input type="text" id="chat-input" placeholder="Ask something..." style="width: 80%;">
+    <button type="submit">Send</button>
+</form>
+
+<script>
+    // 현재 가게 정보를 JavaScript 변수로 저장
+    const currentBusiness = {
+        title: "<%= business.title %>",
+        description: "<%= business.description %>",
+        location: "<%= business.location %>"
+    };
+    const businessContext = `Title: ${currentBusiness.title}, Description: ${currentBusiness.description}, Location: ${currentBusiness.location}`;
+
+    // 폼 제출 시 실행될 함수
+    async function sendChat(event) {
+        // 1. 폼의 기본 동작(페이지 새로고침)을 막습니다.
+        event.preventDefault();
+
+        const chatInput = document.getElementById('chat-input');
+        const chatLog = document.getElementById('chat-log');
+        const userMessage = chatInput.value;
+
+        if (!userMessage) return; // 입력 내용이 없으면 중단
+
+        // 2. 사용자의 메시지를 채팅창에 먼저 표시합니다.
+        chatLog.innerHTML += `<div><strong>You:</strong> ${userMessage}</div>`;
+        chatInput.value = ''; // 입력창 비우기
+
+        try {
+            // 3. fetch API를 사용해 백엔드(/chat)로 데이터를 보냅니다.
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // 사용자 메시지와 현재 가게 정보를 함께 보냅니다.
+                body: JSON.stringify({ prompt: userMessage, context: businessContext })
+            });
+
+            const data = await response.json();
+            const botMessage = data.response;
+
+            // 4. 백엔드에서 받은 AI의 답변을 채팅창에 표시합니다.
+            chatLog.innerHTML += `<div><strong>Bot:</strong> ${botMessage}</div>`;
+
+        } catch (error) {
+            console.error('Error sending chat:', error);
+            chatLog.innerHTML += `<div><strong>Bot:</strong> Sorry, I'm having trouble connecting.</div>`;
+        }
+        
+        // 5. 채팅창 스크롤을 항상 맨 아래로 내립니다.
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+</script>
+
 </html>
